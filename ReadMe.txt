@@ -1,0 +1,1 @@
+A program that solves sudoku puzzles. The goal is to have a single program that can output a completed puzzle from given input image or text.
