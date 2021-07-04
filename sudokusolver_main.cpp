@@ -7,13 +7,12 @@
 
 int main()
 {
-        std::ifstream in("in.txt");
+    std::ifstream in("in.txt");
     std::streambuf *cinbuf = std::cin.rdbuf();
     std::cin.rdbuf(in.rdbuf());
 
     std::list<int> l;
     int value;
-    bool solved = false; // Flag for checking whether the puzzle has been declared solved or not
 
     for(int i = 0;i<81;i++)
     {
@@ -29,25 +28,9 @@ int main()
     SS::Grid grid = SS::Grid(l);
 
     /* If the input puzzle is simple, the puzzle might already be solved at this point. */
-    
 
-
-    // As long as the puzzle has not been declared solved, make guesses until it is
-    while(!solved)
-    {
-        
-        //The puzzle is solved as long as no zeroes are found, so we set solved = true and flip it back to false if a zero is encountered
-        solved = true;
-        int* out = grid.checkPuzzle();
-        if(out[0] != -1)
-        {
-            int x = out[0]; int y = out[1];
-            int v = grid[x][y]->p;
-            grid[x][y]->value(v);
-            grid->updatePvals(x, y, v);
-        }
-    }
-    
+    // Call the solver function to complete the puzzle.
+    grid = solve(grid);
 
     for(int i = 0;i<81;i++)
     {
@@ -73,25 +56,33 @@ int main()
             std::cout << std::endl;
         }
     }
-    ptr = l.begin();
-    std::cout << "Finished puzzle:\n";
-    for(int i = 0;i<9;i++)
+
+    if(grid.isLegal())
     {
-        for(int j = 0;j<9;j++)
+        ptr = l.begin();
+        std::cout << "Finished puzzle:\n";
+        for(int i = 0;i<9;i++)
         {
-            std::cout << gridList.front();
-            if(gridList.front() != *ptr)
+            for(int j = 0;j<9;j++)
             {
-                onelinelist.push_back(gridList.front());
+                std::cout << gridList.front();
+                if(gridList.front() != *ptr)
+                {
+                    onelinelist.push_back(gridList.front());
+                }
+                ptr++;
+                gridList.pop_front();
             }
-            ptr++;
-            gridList.pop_front();
+            std::cout << std::endl;
         }
-        std::cout << std::endl;
+        std::cout << std::endl << "The missing numbers in one list, front left to right and top to bottom:\n";
+        for(ptr = onelinelist.begin();ptr != onelinelist.end();ptr++)
+        {
+            std::cout << *ptr;
+        }
     }
-    std::cout << std::endl << "The missing numbers in one list, front left to right and top to bottom:\n";
-    for(ptr = onelinelist.begin();ptr != onelinelist.end();ptr++)
+    else
     {
-        std::cout << *ptr;
+        std::cout << "The puzzle is impossible to solve :(" << std::endl;
     }
 }
