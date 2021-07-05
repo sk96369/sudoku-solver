@@ -23,6 +23,8 @@ namespace SS
 
         Cell();
         Cell(const Cell &c);
+        bool hasPval() const;
+        void removeTopPval();
     };
 
     std::ostream& operator<<(std::ostream& os, const Cell& c);
@@ -33,6 +35,8 @@ namespace SS
         //std::queue<std::queue<Cell*>> verticals;
         //std::queue<std::queue<Cell*>> horizontals;
         //std::queue<std::queue<Cell*>> boxes;
+        static int count;
+        int gridNr;
         Cell* grid[9][9];
         bool legal;
         public:
@@ -40,17 +44,21 @@ namespace SS
         void updatePvals(int x, int y, int v);
         std::list<int> getGrid();
         const std::list<int> operator[](int) const;
-        // A function that returns a list of integers that point to cells that have no values yet
-        std::list<int> missingvalues() const;
+        // A function that returns the index to the first cell with no value set, or -1 if the grid is filled
+        int missingvalues() const;
         Grid(const Grid &g);
         Cell* getCell(int x, int y) const;
         void legalCheck();
         bool isLegal() const;
         Cell* getCell(int i);
+        // Checks the grid for completion and legality based on the sudoku rules
         bool updatelegality();
+        // Function for declaring the grid illegal
+        void markIllegal();
+        int getNr() const;
     };
 
-    Grid solve(Grid g);
+    Grid solve(Grid &g);
 
 }
 

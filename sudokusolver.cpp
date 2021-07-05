@@ -7,6 +7,8 @@
 
 namespace SS
 {
+    // Define the static member as 0
+    int Grid::count = 0;
 
     Cell::Cell() : val(0)
     {
@@ -31,8 +33,14 @@ namespace SS
         return newlist;
     }
 
-    Grid::Grid(std::list<int> lst) : legal(true)
+    int Grid::getNr() const
     {
+        return gridNr;
+    }
+
+    Grid::Grid(std::list<int> lst) : legal(true), gridNr(count)
+    {
+        count++;
         for(int i = 0;i<9;i++)
         {
             for(int j = 0;j<9;j++)
@@ -64,8 +72,9 @@ namespace SS
         return grid[x][y];
     }
 
-    Grid::Grid(const Grid &g) : legal(true)
+    Grid::Grid(const Grid &g) : legal(g.isLegal()), gridNr(count)
     {
+        count++;
         for(int i = 0;i<9;i++)
         {
             for(int j = 0;j<9;j++)
@@ -92,6 +101,11 @@ namespace SS
     int Cell::value() const
     {
         return val;
+    }
+
+    void Cell::removeTopPval()
+    {
+        pval.pop_front();
     }
 
     // update the pvals of each cell affected by a value assignment
@@ -174,7 +188,7 @@ namespace SS
         return l;
     }
 
-    // Goes through the list of possible values for the cell and removes matches to v
+    // Goes through the list of possible values for the cell and removes matches to v. Returns 0 if no possible values were removed
     int Cell::removePval(int v)
     {
         if(!pval.empty())
@@ -198,80 +212,112 @@ namespace SS
         return 0;
     }
 
-    // Function for listing all the cells with missing values. Returns a list of integers
-    std::list<int> Grid::missingvalues() const
+    int Grid::missingvalues() const
     {
-        std::list<int> missingslist;
         for(int i = 0;i<81;i++)
         {
             if(grid[i/9][i%9]->value() == 0)
-                missingslist.push_back(i);
+                return i;
         }
-        return missingslist;
+        return -1;
     }
 
     void Grid::legalCheck()
     {
         legal=updatelegality();
+        if(!legal)
+        {
+            std::cout << "The grid is illegal!" << std::endl;
+        }
+        else
+            std::cout << "The grid is legal!" << std::endl;
     }
 
-    // Function for testing if the completed grid is legal. False for legal
+    // Function for testing if the completed grid is legal. True for legal, false for illegal
     bool Grid::updatelegality()
     {
-        // Horizontal sums
-        int sum = 0;
+        std::cout << "The filled grid:\n";                                                                                 //TESTOUTPUT
         for(int i = 0;i<9;i++)
         {
+            for(int j = 0;j<9;j++)
+            {
+                std::cout << grid[i][j]->value();
+            }
+            std::cout << std::endl;
+        }
+
+        // Horizontal sums
+        int sum = 0;
+        std::cout << "Horizontal sum:";
+        for(int i = 0;i<9;i++)
+        {
+            sum = 0;
+            std::cout << std::endl << "Sum for row " << i << std::endl;
             for(int j = 0;j<9;j++)
             {
                 sum += grid[i][j]->value();
+                std::cout << grid[i][j]->value();
             }
+            std::cout << "The horizontal sum: " << sum << std::endl;
+            if(sum != 45)
+            {
+                std::cout << "Incorrect sum!" << std::endl;
+                return false;
+            }
+                
         }
-        if(sum != 45)
-            return false;
+        
 
         // Vertical sums
-        sum = 0;
         for(int i = 0;i<9;i++)
         {
+            sum = 0;
+            std::cout << std::endl << "Sum for collumn " << i << std::endl;
             for(int j = 0;j<9;j++)
             {
                 sum += grid[j][i]->value();
+                std::cout << grid[j][i]->value();
             }
+            if(sum != 45)
+                return false;
+                std::cout << "The vertical sum: " << sum << std::endl;
         }
-        if(sum != 45)
-            return false;
 
         // Box sums
-        sum = 0;
         for(int i = 0;i < 9;i++)
         {
+            sum = 0;
+            std::cout << std::endl << "Sum for box " << i << std::endl;
             for(int j = 0;j < 9;j++)
             {
-                sum += grid[((i/3)*3)+(i%3)][((j/9)*3)+(i%3)]->value();
+                sum += grid[((i/3)*3)+(j/3)][((i%3)*3)+(j%3)]->value();
+                std::cout << grid[((i/3)*3)+(j/3)][((i%3)*3)+(j%3)]->value();
             }
+            if(sum != 45)
+                return false;
+                std::cout << "The box sum: " << sum << std::endl;
         }
-        if(sum != 45)
-            return false;
         
         // Check for duplicates horizontally
         for(int i = 0;i<9;i++)
         {
-            int duplcheck[9];
+            int duplcheck[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
             for(int j = 0;j<9;j++)
             {
                 int v = grid[i][j]->value();
                 if(duplcheck[v] == 0)
                     duplcheck[v] = v;
                 else
+                {
                     return false;
+                }
             }
         }
 
         // Check for duplicates vertically
         for(int i = 0;i<9;i++)
         {
-            int duplcheck[9];
+            int duplcheck[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
             for(int j = 0;j<9;j++)
             {
                 int v = grid[j][i]->value();
@@ -284,10 +330,10 @@ namespace SS
         // Check for duplicates by boxes
         for(int i = 0;i<9;i++)
         {
-            int duplcheck[9];
+            int duplcheck[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
             for(int j = 0;j<9;j++)
             {
-                int v = grid[(i/3)*3 + (i%3)][(j/3)*3 + (j%3)]->value();
+                int v = grid[(i/3)*3 + (j/3)][(i%3)*3 + (j%3)]->value();
                 if(duplcheck[v] == 0)
                     duplcheck[v] = v;
                 else
@@ -300,43 +346,73 @@ namespace SS
 
     Cell* Grid::getCell(int i)
     {
-        return grid[i/3][i%3];
+        return grid[i/9][i%9];
     }
 
     // A function that makes guesses on the missing values until the puzzle is complete. Returns the completed puzzle grid (or NULL if the puzzle is impossible)
     // state. As long as the puzzle is not completed, creates a copy of the current grid, in which guesses on the missing values are made. If the puzzle doesn't complete itself 
     // upon taking a guess, the function will call itself recursively until the puzzle is complete 
-    Grid solve(Grid g)
+    Grid solve(Grid &g)
     {
         //List of indexes to the cells with missing values
-        std::list<int> mlist = g.missingvalues();
-        if(!mlist.empty())
+        int firstcell = g.missingvalues();
+        std::cout << "_______________\nSolving..." << std::endl;
+        if(firstcell != -1)
         {
-            for(std::list<int>::iterator ptr = mlist.begin();ptr != mlist.end();ptr++)                                      // FIX THIS SHIT
+            // Get the pointer to the first unfilled cell of the given grid
+            Cell* c = g.getCell(firstcell);
+            // Go through all the possible values for the cell
+            while(c->hasPval())
             {
+                std::list<int> cpvals;
+                // Create a copy of the given grid
                 Grid copy = g;
-                int firstcell = mlist.front();
-                Cell* c = copy.getCell(firstcell);
-                int newval = c->setTopGuess();
+                Cell* c_copy = copy.getCell(firstcell);
+                c_copy->getPval(cpvals);
+
+                std::cout << "Possible values for Cell #" << firstcell << std::endl;
+                for(std::list<int>::iterator cpvalsptr = cpvals.begin();cpvalsptr != cpvals.end();cpvalsptr++)
+                {
+                    std::cout << *cpvalsptr << " ";
+                }
+                std::cout << std::endl;
+
+                std::cout << "Created a new copy of the grid, grid #: " << copy.getNr() << std::endl;
+                std::cout << "Taking a guess on cell #: " << firstcell << "\n";
+                int newval = c_copy->setTopGuess();
                 copy.updatePvals(firstcell/9, firstcell%9, newval);              
                 copy = solve(copy);
                 if(copy.isLegal())
                 {
+                    std::cout << "The solution is legal! Grid nr: " << copy.getNr() << " legality: " << copy.isLegal() << std::endl;
                     return copy;
                 }
+                // If the the call of the solve function returns an illegal solution, remove the guessed value from the given grid, because that value is now known to
+                // not be a possible value
+                c->removeTopPval();
             }
+            // If all of the possible values end up producing an illegal solution, declare the grid illegal and return it
+            std::cout << "The cell has no more possible values, marking this copy of the grid illegal.\n";
+            g.markIllegal();
             return g;
         }
+        std::cout << "The puzzle is filled! Checking legality..." << std::endl;
         g.legalCheck();
         return g;
+    }
+
+    void Grid::markIllegal()
+    {
+        legal = false;
     }
 
     // Sets the cell's value to be the one on the top of the list of possible values.
     int Cell::setTopGuess()
     {
         int top = pval.front();
+        std::cout << "Guessing the value: " << top << std::endl;
         val = top;
-        pval.pop_front();
+        pval.clear();
         return top;
     }
 
@@ -360,6 +436,12 @@ namespace SS
         std::list<int> l;
         grid[i/9][i%9]->getPval(l);
         return l;
+    }
+
+    // Returns true if the cell's list of possible values is not empty
+    bool Cell::hasPval() const
+    {
+        return !pval.empty();
     }
 
 }

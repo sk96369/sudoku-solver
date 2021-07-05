@@ -19,11 +19,10 @@ int main()
         std::cin >> value;
         l.push_back(value);
     }
-    std::cout << std::endl;
 
-    std::ofstream out("out.txt");
+    std::ofstream logtxt("log.txt");
     std::streambuf *coutbuf = std::cout.rdbuf();
-    std::cout.rdbuf(out.rdbuf());
+    std::cout.rdbuf(logtxt.rdbuf());
 
     SS::Grid grid = SS::Grid(l);
 
@@ -46,43 +45,71 @@ int main()
     std::list<int> onelinelist;
     int help = 0;
 
-    std::cout << "Input puzzle:\n";
+    std::ofstream out("out.txt");
+
+    out << "Input puzzle:\n";
     for(;ptr != l.end();ptr++)
     {
-        std::cout << *ptr;
+        out << *ptr;
         help++;
         if(help%9==0)
         {
-            std::cout << std::endl;
+            out << std::endl;
         }
     }
+
+    // List for printing out the missing numbers formatted into a grid
+    std::list<int> missingparts;
 
     if(grid.isLegal())
     {
         ptr = l.begin();
-        std::cout << "Finished puzzle:\n";
+        out << "\nFinished puzzle:\n";
         for(int i = 0;i<9;i++)
         {
             for(int j = 0;j<9;j++)
             {
-                std::cout << gridList.front();
+                out << gridList.front();
                 if(gridList.front() != *ptr)
                 {
-                    onelinelist.push_back(gridList.front());
+                    int front = gridList.front();
+                    // Adding 48 to the value, so it converts into the same number when cast into char
+                    missingparts.push_back(front+48);
+                    onelinelist.push_back(front);
+                }
+                else
+                {
+                    // push 32 to represent empty spaces, because it converts to ' ' when cast into char
+                    missingparts.push_back(32);
                 }
                 ptr++;
                 gridList.pop_front();
             }
-            std::cout << std::endl;
+            out << std::endl;
         }
-        std::cout << std::endl << "The missing numbers in one list, front left to right and top to bottom:\n";
+        out << std::endl << "\n\nThe missing numbers in one list, front left to right and top to bottom:\n";
         for(ptr = onelinelist.begin();ptr != onelinelist.end();ptr++)
         {
-            std::cout << *ptr;
+            out << *ptr;
         }
+
+        std::list<int>::iterator charptr = missingparts.begin();
+        out << "\n\nThe missing numbers arranged into the shape of the input puzzle:\n";
+        for(int i = 0;i<9;i++)
+        {
+            for(int j = 0;j<9;j++)
+            {
+                out << (char)*charptr;
+                charptr++;
+            }
+            out << std::endl;
+        }
+
     }
     else
     {
-        std::cout << "The puzzle is impossible to solve :(" << std::endl;
+        out << "The puzzle is impossible to solve :(" << std::endl;
     }
+    out.close();
+    return 0;
 }
